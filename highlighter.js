@@ -104,10 +104,25 @@ document.addEventListener("selectionchange", () => {
 
 function renderSelectedNotes() {
 	notesContainer.innerHTML = "";
-	selectedTexts.forEach((selectedText) => {
+	selectedTexts.forEach((selectedText, index) => {
 		const noteDiv = document.createElement("div");
 		noteDiv.classList.add("note");
-		noteDiv.textContent = selectedText;
+
+		// create the delete button
+		const deleteBtn = document.createElement("button");
+		deleteBtn.innerHTML = '<i class="fa fa-times"></i>';
+		deleteBtn.classList.add("delete-btn");
+		deleteBtn.addEventListener("click", () => {
+			selectedTexts.splice(index, 1); // remove the note from the array
+			renderSelectedNotes(); // re-render the notes container
+		});
+		noteDiv.appendChild(deleteBtn);
+
+		// add the note text
+		const noteText = document.createElement("span");
+		noteText.textContent = selectedText;
+		noteDiv.appendChild(noteText);
+
 		notesContainer.appendChild(noteDiv);
 	});
 }
