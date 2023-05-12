@@ -1,4 +1,19 @@
 let timeoutId;
+const selectedTexts = [];
+
+const drawerBtn = document.getElementById("drawer-btn");
+const drawer = document.getElementById("drawer");
+const closeBtn = document.getElementById("close-btn");
+const notesContainer = document.getElementById("notes-container");
+
+drawerBtn.addEventListener("click", () => {
+	drawer.classList.add("open");
+	renderSelectedNotes();
+});
+
+closeBtn.addEventListener("click", () => {
+	drawer.classList.remove("open");
+});
 
 document.addEventListener("selectionchange", () => {
 	clearTimeout(timeoutId);
@@ -17,13 +32,69 @@ document.addEventListener("selectionchange", () => {
 				abbreviatedText = selectedText;
 			}
 
-			const confirmation = confirm(
-				`Are you sure you want to select this text?\n\n${abbreviatedText}`
-			);
+			const confirmationDiv = document.createElement("div");
+			confirmationDiv.innerHTML = `
+              <div style="
+                position: absolute;
+                top: ${
+									selection.getRangeAt(0).getBoundingClientRect().top - 40
+								}px;
+                left: ${selection.getRangeAt(0).getBoundingClientRect().left}px;
+                padding: 10px;
+                background-color: white;
+                border: 1px solid black;
+                border-radius: 4px;
 
-			if (confirmation) {
+              ">
+                <p>Are you sure you want to select this text?</p>
+                <p>${abbreviatedText}</p>
+                <button id="confirm-selection" style="
+                  background-color: rgb(193, 229, 148);
+                  border-radius: 3px;
+                  padding: 8px 30px;
+                  color: white;
+                  border: none;
+                  margin: 10px;
+                  transition: background-color 100ms ease-in-out;
+                "><i class="fa fa-check" aria-hidden="true"></i></button>
+                <button id="cancel-selection" style="
+                  background-color: rgb(231, 173, 173);
+                  border-radius: 3px;
+
+                  padding: 8px 30px;
+                  color: white;
+                  border: none;
+                  margin: 10px;
+                  transition: background-color 100ms ease-in-out;
+                "><i class="fa fa-times" aria-hidden="true"></i></button>
+              </div>
+            `;
+
+			document.body.appendChild(confirmationDiv);
+
+			const confirmButton = confirmationDiv.querySelector("#confirm-selection");
+			confirmButton.addEventListener("click", () => {
+				selectedTexts.push(selectedText);
 				console.log(`Selected text: ${selectedText}`);
-			}
+				console.log(selectedTexts);
+				confirmationDiv.remove();
+				renderSelectedNotes();
+			});
+
+			const cancelButton = confirmationDiv.querySelector("#cancel-selection");
+			cancelButton.addEventListener("click", () => {
+				confirmationDiv.remove();
+			});
 		}
 	}, 500);
 });
+
+function renderSelectedNotes() {
+	notesContainer.innerHTML = "";
+	selectedTexts.forEach((selectedText) => {
+		const noteDiv = document.createElement("div");
+		noteDiv.classList.add("note");
+		noteDiv.textContent = selectedText;
+		notesContainer.appendChild(noteDiv);
+	});
+}
