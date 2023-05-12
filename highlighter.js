@@ -6,6 +6,8 @@ const drawer = document.getElementById("drawer");
 const closeBtn = document.getElementById("close-btn");
 const notesContainer = document.getElementById("notes-container");
 
+let isConfirmationDialogOpen = false;
+
 drawerBtn.addEventListener("click", () => {
 	drawer.classList.add("open");
 	renderSelectedNotes();
@@ -20,20 +22,25 @@ document.addEventListener("selectionchange", () => {
 
 	timeoutId = setTimeout(() => {
 		const selection = window.getSelection();
-		if (selection.type === "Range") {
-			const selectedText = selection.toString().trim();
-			const words = selectedText.split(" ");
-			let abbreviatedText = "";
+		const selectionContainer = selection.anchorNode.parentNode;
 
-			if (words.length >= 3) {
-				abbreviatedText =
-					words[0] + " " + words[1] + "..." + words[words.length - 1];
-			} else {
-				abbreviatedText = selectedText;
-			}
+		// Check if selection is inside the drawer div
+		if (!drawer.contains(selectionContainer)) {
+			if (selection.type === "Range" && !isConfirmationDialogOpen) {
+				const selectedText = selection.toString().trim();
 
-			const confirmationDiv = document.createElement("div");
-			confirmationDiv.innerHTML = `
+				const words = selectedText.split(" ");
+				let abbreviatedText = "";
+
+				if (words.length >= 3) {
+					abbreviatedText =
+						words[0] + " " + words[1] + "..." + words[words.length - 1];
+				} else {
+					abbreviatedText = selectedText;
+				}
+
+				const confirmationDiv = document.createElement("div");
+				confirmationDiv.innerHTML = `
               <div style="
                 position: absolute;
                 top: ${
@@ -70,21 +77,27 @@ document.addEventListener("selectionchange", () => {
               </div>
             `;
 
-			document.body.appendChild(confirmationDiv);
+				document.body.appendChild(confirmationDiv);
 
-			const confirmButton = confirmationDiv.querySelector("#confirm-selection");
-			confirmButton.addEventListener("click", () => {
-				selectedTexts.push(selectedText);
-				console.log(`Selected text: ${selectedText}`);
-				console.log(selectedTexts);
-				confirmationDiv.remove();
-				renderSelectedNotes();
-			});
+				isConfirmationDialogOpen = true;
 
-			const cancelButton = confirmationDiv.querySelector("#cancel-selection");
-			cancelButton.addEventListener("click", () => {
-				confirmationDiv.remove();
-			});
+				const confirmButton =
+					confirmationDiv.querySelector("#confirm-selection");
+				confirmButton.addEventListener("click", () => {
+					selectedTexts.push(selectedText);
+					console.log(`Selected text: ${selectedText}`);
+					console.log(selectedTexts);
+					confirmationDiv.remove();
+					isConfirmationDialogOpen = false;
+					renderSelectedNotes();
+				});
+
+				const cancelButton = confirmationDiv.querySelector("#cancel-selection");
+				cancelButton.addEventListener("click", () => {
+					confirmationDiv.remove();
+					isConfirmationDialogOpen = false;
+				});
+			}
 		}
 	}, 500);
 });
